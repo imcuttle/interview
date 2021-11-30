@@ -29,6 +29,7 @@ class Call {
 class EventBus {
     constructor() {
         this.events = Object.create(null)
+        this.caller = null
     }
 
     getEventCallbacks(name) {
@@ -43,14 +44,14 @@ class EventBus {
 
     trigger(name, ...args) {
         const eventCall = new Call('event', name)
-        if (this.callee) {
-            this.callee.calls.push(eventCall)
-            eventCall.parent = this.callee
+        if (this.caller) {
+            this.caller.calls.push(eventCall)
+            eventCall.parent = this.caller
         }
         const cbs = this.getEventCallbacks(name)
         const promises = []
         for (const cb of cbs) {
-            let p = this.callee
+            let p = this.caller
             while (p) {
                 if (p.data.raw === cb) {
                     throw new Error(`circle event call: ${p.parent.name}`)
@@ -66,10 +67,10 @@ class EventBus {
             eventCall.calls.push(cbCall)
 
             const cl = this.clone()
-            cl.callee = cbCall
+            cl.caller = cbCall
 
             promises.push(Promise.resolve(cb.apply(cl, args)).finally(() => {
-                delete cl.callee
+                delete cl.caller
             }))
         }
         return {
