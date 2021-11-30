@@ -1,0 +1,23 @@
+{
+  "name": "interview",
+  "version": "1.0.0",
+  "description": "题一和题四要求候选人独立阅读完成，候选人可以提问题，面试官回答。但面试官不讲解整个题目。",
+  "main": "ordered-link-list.js",
+  "scripts": {
+    "test": "npx jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/imcuttle/interview.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/imcuttle/interview/issues"
+  },
+  "homepage": "https://github.com/imcuttle/interview#readme",
+  "devDependencies": {
+    "jest": "^27.4.2"
+  }
+}
