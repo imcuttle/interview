@@ -68,14 +68,24 @@ class EventBus {
 
             const cl = this.clone()
             cl.caller = cbCall
+            cl.workingPromiseList = []
 
             promises.push(Promise.resolve(cb.apply(cl, args)).finally(() => {
                 delete cl.caller
+                return Promise.all(cl.workingPromiseList)
+            }).finally(() => {
+                delete cl.workingPromiseList
             }))
+        }
+
+        const promise = Promise.all(promises)
+
+        if (this.workingPromiseList) {
+            this.workingPromiseList.push(promise)
         }
         return {
             call: eventCall,
-            promise: Promise.all(promises)
+            promise
         }
     }
 
@@ -224,6 +234,42 @@ event: testEvent
               |-event: testEvent2
                   |-callback: callback2
   |-callback: callback1_1
+        `.trim()
+    },
+
+    {
+        name: 'async case 2',
+        main: async () => {
+            const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+            const bus = new EventBus()
+            bus.listen('testEvent', async function callback1() {
+                await delay(100)
+                this.trigger('testEvent2')
+                this.trigger('testEvent3')
+            })
+
+            bus.listen('testEvent2', function callback2() {
+            })
+
+            bus.listen('testEvent3', async function callback3() {
+                // await this.trigger('testEvent4').promise
+                await delay(100)
+                this.trigger('testEvent2')
+            })
+
+            const triggerCall = bus.trigger('testEvent')
+            await triggerCall.promise
+            return triggerCall.call.toString()
+        },
+        output: `
+event: testEvent
+  |-callback: callback1
+      |-event: testEvent2
+          |-callback: callback2
+      |-event: testEvent3
+          |-callback: callback3
+              |-event: testEvent2
+                  |-callback: callback2
         `.trim()
     }
 ]
